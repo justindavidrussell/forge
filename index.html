@@ -690,14 +690,52 @@ body::after{content:"";position:fixed;left:0;right:0;top:100%;height:200px;backg
 .seg.mseg.dis{opacity:.5}
 .mhint{font:700 12px/1.25 var(--fd);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);text-align:center}
 .mtip{font:500 11.5px/1.35 var(--fu);color:var(--dim2);text-align:center;padding:0 10px}
-.accchip{display:none;margin-top:6px;font:800 13px/1 var(--fd);letter-spacing:.08em;padding:4px 10px 5px;border-radius:999px;border:1px solid currentColor}
-.accchip.on{display:inline-block}
+.chips{display:flex;gap:5px;justify-content:center;align-items:center;margin-top:6px;max-width:74%;flex-wrap:nowrap}
+.accchip,.mochip,.mdchip{display:none;font:800 12.5px/1 var(--fd);letter-spacing:.08em;padding:4px 8px 5px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.accchip.on,.mochip.on,.mdchip.on{display:inline-flex;align-items:center;gap:5px}
 .accchip[data-q="g"]{color:var(--ok);background:rgba(53,224,124,.12)}
 .accchip[data-q="a"]{color:var(--warn);background:rgba(255,197,61,.12)}
 .accchip[data-q="r"]{color:var(--bad);background:rgba(255,77,77,.13)}
 .ring.lockp .tk{animation:none}
 .ring.lockp .tk.on{stroke:var(--warn)}
 .ring.lockp .tk.hd{stroke:#fff}
+/* ---- MEASURE build 3.3: STILL / WALKING chip, mode chip while running, pinned action rows ---- */
+.mdchip{color:var(--dim);border-color:var(--line2);background:rgba(255,255,255,.05)}
+.mochip i{width:7px;height:7px;border-radius:50%;background:currentColor}
+.mochip b{font-weight:800}
+.mochip[data-m="still"]{color:#8fd3ff;background:rgba(77,184,217,.13)}
+.mochip[data-m="walking"]{color:var(--acc-hi);background:rgba(var(--acc-rgb),.14)}
+.mochip[data-m="walking"] i{animation:blink .9s steps(2) infinite}
+#dist.held{text-shadow:0 0 22px rgba(143,211,255,.25)}
+/* action buttons always visible: pinned to the bottom of the scroll area (above the tab bar) on portrait phones */
+@media (max-width:759px) and (orientation:portrait){
+  body:not(.fs) #timer-tab .t-ctrls{position:sticky;bottom:0;z-index:6;margin:0 -16px;padding:12px 16px 10px;
+    background:linear-gradient(rgba(8,9,10,0),rgba(8,9,10,.9) 22%,rgba(8,9,10,.96))}
+  body:not(.fs) #timer-tab .t-ctrls .btn{box-shadow:0 -2px 18px rgba(0,0,0,.35)}
+  /* running: ring sized from the available height so the next-mark card and stats fit above the pinned buttons */
+  #track-tab .hero{container-type:inline-size}
+  #track-tab .hero:not(.compact){width:max(236px,min(86vw,352px,calc(var(--app-h,100dvh) - 560px)))}
+  #track-tab .hero:not(.compact) .readout{font-size:33.5cqw}
+  #track-tab .hero:not(.compact) .runit{font-size:max(12.5px,4.3cqw);margin-top:max(4px,1.7cqw)}
+  #track-tab .hero:not(.compact) .rsub{font-size:max(11.5px,3.7cqw);margin-top:max(5px,2.5cqw)}
+}
+/* MEASURE dock (all layouts): status + START/RESET are the last thing in the tab, so bottom-sticky pins them above the tab bar at every scroll position */
+#track-tab .ctrls{position:static;margin:0;padding:0;background:none}
+#track-tab .ctrls .btn{box-shadow:none}
+body[data-tab="track-tab"] main{padding-bottom:0}
+#track-tab .note{margin-bottom:14px}
+.mdock{position:sticky;bottom:0;z-index:6;margin:6px -16px 0;padding:14px 16px 10px;background:linear-gradient(rgba(8,9,10,0),#08090a 14px)}
+.mdock .msg{margin:0 4px 8px}
+.mdock .msg:empty{display:none}
+@media (max-width:759px) and (orientation:portrait){
+  /* TIMER: pin to the real bottom of the scroll area (main keeps 28px padding) and keep the ring short enough on small screens */
+  body:not(.fs) #timer-tab .t-ctrls{bottom:-28px}
+  body:not(.fs) #timer-tab .hero.th{width:min(90vw,372px,max(240px,calc(var(--app-h,100dvh) - 250px)))}
+}
+/* chips scale with the ring (small phones) */
+#track-tab .hero .chips{max-width:82%;gap:clamp(3px,1.3cqw,5px)}
+#track-tab .hero .chips>span{font-size:clamp(10px,3.7cqw,12.5px);padding:clamp(3px,1cqw,4px) clamp(5px,2.1cqw,8px) clamp(4px,1.3cqw,5px);letter-spacing:.06em}
+#track-tab .hero .mochip i{width:6px;height:6px}
 </style>
 <script>
 /* FORGE_SHELL: iOS Home-Screen bottom-gap workaround, runs before first paint.
@@ -706,7 +744,7 @@ body::after{content:"";position:fixed;left:0;right:0;top:100%;height:200px;backg
    drawn under the status bar, gap 1..120px) the shell is sized to the physical screen height and the tab bar pads
    its buttons up by the gap, so they stay inside the touchable area while its background reaches the bottom edge. */
 (function(){
-  var R = document.documentElement, BUILD = 'Build 3.2 \u00b7 2026-09-26', last = null;
+  var R = document.documentElement, BUILD = 'Build 3.3 \u00b7 2026-09-26', last = null;
   function standalone(){ try{ return navigator.standalone===true || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches; }catch(e){ return false; } }
   var probe = document.createElement('div'); probe.id = 'saProbe'; probe.setAttribute('aria-hidden','true');
   probe.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
@@ -859,7 +897,7 @@ body::after{content:"";position:fixed;left:0;right:0;top:100%;height:200px;backg
       <div class="readout" id="dist">0</div>
       <div class="runit" id="distUnit">METERS</div>
       <div class="rsub num" id="distSub">0.00 KM</div>
-      <div class="accchip" id="accChip" data-q="g"></div>
+      <div class="chips" id="mChips"><span class="mdchip" id="mdChip">STRAIGHT</span><span class="accchip" id="accChip" data-q="g"></span><span class="mochip" id="moChip" data-m="still"><i></i><b>STILL</b></span></div>
     </div>
   </div>
   <div class="mmode" id="mMode">
@@ -895,13 +933,6 @@ body::after{content:"";position:fixed;left:0;right:0;top:100%;height:200px;backg
     <div class="stat glass"><div class="k">Finish</div><div class="v num" id="stLeft">&mdash;</div></div>
   </div>
 
-  <div class="msg" id="status"></div>
-
-  <div class="ctrls">
-    <button class="btn go" id="startBtn"><svg id="startIc" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg><span id="startTx">START</span></button>
-    <button class="btn ghost" id="resetBtn" style="font-size:17px">RESET</button>
-  </div>
-
   <div class="prep glass" id="prep">
     <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
     <div class="tx"><b>Ringer on · vol up</b>Side switch to ring, then test.</div>
@@ -911,7 +942,15 @@ body::after{content:"";position:fixed;left:0;right:0;top:100%;height:200px;backg
   <div class="sec chk-h"><div><h3>CHECKLIST</h3><span id="chkSum"></span></div><div class="chk-ctl" id="chkCtl"><button class="mini" id="chkEdit">EDIT</button><button class="mini danger" id="chkClear">CLEAR ALL</button></div></div>
   <ol class="chk" id="chk"></ol>
   <button class="more" id="moreBtn"><span>Auto-fill evenly spaced marks, bulk edit &amp; saved courses. Alert sounds live in Settings.</span><b>COURSE TOOLS ›</b></button>
-  <p class="note">Stand on the start line and wait for <b>LIVE</b> before you walk. Hold the phone out in front and walk at a steady pace. It beeps as you get close and goes off at each mark. <b>PAUSE</b> freezes the count so you can walk back without adding distance, and it re-locks GPS when you resume. GPS is usually good to 2&ndash;5 m, so check short station lanes with a tape.</p>
+  <p class="note">Stand on the start line and hold still until it says <b>GO</b>. <b>STRAIGHT</b> (default) measures the straight-line distance from the start, best for out-and-back cone lines; <b>PATH</b> follows your route. The number holds while you stand still (motion sensor). Hold the phone flat in front and walk at a steady pace. It beeps as you get close and goes off at each mark. GPS is usually good to 2&ndash;5 m, so check short station lanes with a tape.</p>
+  <div class="mdock" id="mDock">
+    <div class="msg" id="status"></div>
+
+    <div class="ctrls">
+      <button class="btn go" id="startBtn"><svg id="startIc" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg><span id="startTx">START</span></button>
+      <button class="btn ghost" id="resetBtn" style="font-size:17px">RESET</button>
+    </div>
+  </div>
 </section>
 
 <!-- ================= MAP ================= -->
@@ -932,7 +971,7 @@ body::after{content:"";position:fixed;left:0;right:0;top:100%;height:200px;backg
 
 <!-- ================= SETTINGS ================= -->
 <section id="settings-tab" class="tab">
-  <div class="chead"><h2><small>FORGE · TIMER + COURSE <span class="bld" id="hdBuild">BUILD 3.2</span></small>Settings</h2></div>
+  <div class="chead"><h2><small>FORGE · TIMER + COURSE <span class="bld" id="hdBuild">BUILD 3.3</span></small>Settings</h2></div>
   <div class="card glass">
     <h4>Units <span>measure &amp; map</span></h4>
     <div class="seg useg wide" id="unitSeg2" data-s="metric" aria-label="Units">
@@ -972,7 +1011,7 @@ body::after{content:"";position:fixed;left:0;right:0;top:100%;height:200px;backg
     <div class="row2" style="margin:0"><button class="btn sm ghost" id="setTReset">RESET SOUNDS</button><button class="btn sm ghost danger" id="setMReset">CLEAR MARKS</button></div>
   </div>
   <div class="card glass" id="aboutCard">
-    <h4>About / Display <span id="abBuild">BUILD 3.2</span></h4>
+    <h4>About / Display <span id="abBuild">BUILD 3.3</span></h4>
     <div class="set-sum" id="diagSum"></div>
     <dl class="diag" id="diag"></dl>
     <div class="row2" style="margin:10px 0 0"><button class="btn sm outline" id="diagRef">REFRESH</button><button class="btn sm ghost" id="diagCopy">COPY INFO</button></div>
@@ -1238,7 +1277,13 @@ var CORE = (function(){
      START LOCK (both modes): stand still; fixes with acc <= 10 m are averaged (1/acc^2) for >= 8 s and >= 4 fixes.
        If that isn't reached within 20 s, T.weak is set and the app may T.forceGo() with the best estimate.
      Kept from v2: 7 m/s jump filter (a jump fix is dropped from the smoothing buffer; only a persistent jump
-       re-anchors), stale/duplicate fixes ignored, pause freezes, path-mode resume re-locks quickly. */
+       re-anchors), stale/duplicate fixes ignored, pause freezes, path-mode resume re-locks quickly.
+     Build 3.3 HOLD (both modes): while standing still the displayed number is frozen and cannot drift. "Still" =
+       the motion sensor says still (T.setMotion, unless GPS Doppler clearly says moving: >= 0.8 m/s on 2 fixes),
+       or the GPS Doppler speed of this fix is < 0.4 m/s. The averaged position keeps refining underneath.
+     Build 3.3 DEADBAND (STRAIGHT): shows 0 until the displacement exceeds max(4 m, 1.5 x accuracy) AND walking has
+       been seen (motion sensor or GPS speed; without a motion sensor the deadband alone). Then the true
+       displacement is shown (no offset subtracted, so marks fire at the true distance). */
   function wmean(buf){
     var la=0, lo=0, w=0, tt=0;
     for (var i=0;i<buf.length;i++){ var p=buf[i], kk=1/Math.pow(Math.max(p.acc,1),2); la+=p.lat*kk; lo+=p.lon*kk; tt+=(p.t||0)*kk; w+=kk; }
@@ -1248,11 +1293,12 @@ var CORE = (function(){
     x = Math.cos(a.lat*r)*Math.sin(b.lat*r) - Math.sin(a.lat*r)*Math.cos(b.lat*r)*Math.cos((b.lon-a.lon)*r); return (Math.atan2(y,x)/r+360)%360; }
   function createTracker(cfg){ /* feed({lat, lon, acc, t, speed?, heading?}) */
     var C = {mode:'straight', maxAcc:12, forcedMaxAcc:30, lockAcc:10, lockMinN:4, lockMs:8000, lockGiveUpMs:20000, relockN:3,
-             smooth:5, straightSmooth:4, straightStill:10, minStep:3, stepAccK:0.6, stillSpeed:0.4, stillAccK:2, spdK:1.25, spdSlack:0.5, maxSpeed:7, maxReject:3, lagComp:true, lagMax:5};
+             smooth:5, straightSmooth:4, dbMin:4, dbK:1.5, moveSpeed:0.8, straightStill:10, minStep:3, stepAccK:0.6, stillSpeed:0.4, stillAccK:2, spdK:1.25, spdSlack:0.5, maxSpeed:7, maxReject:3, lagComp:true, lagMax:5};
     for (var k in (cfg||{})) C[k] = cfg[k];
     var T = {cfg:C, mode:C.mode==='path' ? 'path' : 'straight', state:'idle', committed:0, live:0, buf:[], anchor:null, anchorT:0,
       origin:null, startAcc:null, pos:null, posT:0, lockBuf:[], lockAll:[], lockT0:null, lockElapsed:0, lockCount:0, relock:false,
-      weak:false, forced:false, lastT:-Infinity, rejects:0, acc:null, spdInt:0, spdOk:true, prevT:null, lastS:null, lastST:0};
+      weak:false, forced:false, lastT:-Infinity, rejects:0, acc:null, spdInt:0, spdOk:true, prevT:null, lastS:null, lastST:0,
+      motion:null, walked:false, passed:false, hold:false, gpsMoveN:0, spdGoN:0, noSpdN:0, holdN:0};
     function maxAcc(){ return T.forced ? Math.max(C.maxAcc, C.forcedMaxAcc) : C.maxAcc; }
     function win(){ return T.mode==='straight' ? (T.still ? C.straightStill : C.straightSmooth) : C.smooth; }
     function push(f){ T.buf.push(f); while (T.buf.length>win()) T.buf.shift(); }
@@ -1262,25 +1308,29 @@ var CORE = (function(){
       if (!T.relock){ T.origin = {lat:s.lat, lon:s.lon}; T.startAcc = s.acc; }
       T.anchor = {lat:s.lat, lon:s.lon}; T.anchorT = f.t;
       T.buf = src.slice(-win()); T.pos = {lat:s.lat, lon:s.lon}; T.posT = f.t; T.lastS = s; T.lastST = f.t;
-      T.state = 'run'; T.rejects = 0; T.weak = false; T.live = T.committed; T.spdInt = 0; T.spdOk = true; T.prevT = f.t;
+      T.state = 'run'; T.rejects = 0; T.weak = false; T.live = T.committed; T.spdInt = 0; T.spdOk = true; T.prevT = f.t; T.gpsMoveN = 0; T.hold = false; T.holdN = 0;
+      if (!T.relock){ T.walked = false; T.passed = T.committed>0; }
       return 'go';
     }
     T.lockInfo = function(){ var need = T.relock ? C.relockN : C.lockMinN, ms = T.relock ? 0 : C.lockMs;
       var fn = Math.min(1, T.lockBuf.length/need), ft = ms ? Math.min(1, T.lockElapsed/ms) : 1;
       return {n:T.lockBuf.length, need:need, elapsed:T.lockElapsed, ms:ms, frac:Math.min(fn, ft), relock:T.relock, weak:T.weak,
         acc:T.lockBuf.length ? wmean(T.lockBuf).acc : null}; };
+    /* motion sensor state: null = unavailable, 'unknown' (not enough samples yet), 'still' or 'walking' */
+    T.setMotion = function(m){ T.motion = (m==='still' || m==='walking' || m==='unknown') ? m : null; if (m==='walking') T.walked = true; };
+    T.motionOn = function(){ return T.motion==='still' || T.motion==='walking'; };
     T.setMode = function(m){ if (T.state!=='idle') return false; T.mode = m==='path' ? 'path' : 'straight'; T.origin = null; return true; };
     T.start = function(){ if (T.state==='paused') return T.resume(); T.forced = false; T.origin = null; beginLock(false); };
     T.resume = function(){
-      if (T.mode==='straight' && T.origin){ T.state='run'; T.buf=[]; T.pos=null; T.lastS=null; T.rejects=0; T.live=T.committed; return; }
+      if (T.mode==='straight' && T.origin){ T.state='run'; T.buf=[]; T.pos=null; T.lastS=null; T.rejects=0; T.live=T.committed; T.gpsMoveN=0; T.hold=false; T.holdN=0; return; }
       beginLock(T.mode==='path' && T.committed>0);
     };
     T.forceGo = function(){ if (T.state!=='locking' || !T.lockAll.length) return false; T.forced = true; lockDone(T.lockAll[T.lockAll.length-1]); return true; };
     T.pause = function(){ if (T.state==='run') T.committed=T.live; T.state='paused'; };
     T.cancel = function(){ T.state = T.committed>0 ? 'paused' : 'idle'; T.live=T.committed; if (T.state==='idle') T.origin = null; };
-    T.reset = function(){ T.state='idle'; T.committed=0; T.live=0; T.buf=[]; T.anchor=null; T.origin=null; T.pos=null; T.lockBuf=[]; T.lockAll=[]; T.lockCount=0; T.rejects=0; T.weak=false; T.forced=false; };
+    T.reset = function(){ T.state='idle'; T.committed=0; T.live=0; T.buf=[]; T.anchor=null; T.origin=null; T.pos=null; T.lockBuf=[]; T.lockAll=[]; T.lockCount=0; T.rejects=0; T.weak=false; T.forced=false; T.walked=false; T.passed=false; T.hold=false; T.holdN=0; T.gpsMoveN=0; };
     T.restore = function(m, origin){ T.committed=T.live=Math.max(0,+m||0); T.origin = origin && isFinite(origin.lat) && isFinite(origin.lon) ? {lat:+origin.lat, lon:+origin.lon} : null;
-      T.state = T.committed>0 ? 'paused' : 'idle'; };
+      T.state = T.committed>0 ? 'paused' : 'idle'; T.passed = T.committed>0; };
     /* raw outlier gate: a single fix far outside (7 m/s x dt + 3 x accuracy) of the last smoothed point is a spike */
     function spike(f){ if (!T.lastS) return false; var dt = Math.max((f.t-T.lastST)/1000, 0.5);
       return hav(T.lastS, f) > C.maxSpeed*dt + 3*Math.max(f.acc, T.lastS.acc||0); }
@@ -1290,6 +1340,20 @@ var CORE = (function(){
       var age = Math.max(0, (f.t - s.t)/1000), c = f.speed*age;
       if (from && f.heading!=null && f.heading>=0 && hav(from, s)>5){ var dh = (f.heading - bearing(from, s))*Math.PI/180; c *= Math.max(0, Math.cos(dh)); }
       return Math.min(C.lagMax, c);
+    }
+    /* hold with hysteresis: one still signal enters it; leaving needs movement evidence */
+    function holdNow(f){
+      var hasSpd = f.speed!=null && f.speed>=0, sp = hasSpd ? f.speed : 0;
+      T.gpsMoveN = hasSpd && sp>=C.moveSpeed ? T.gpsMoveN+1 : 0;
+      T.spdGoN = hasSpd && sp>=C.stillSpeed ? T.spdGoN+1 : 0;
+      T.noSpdN = hasSpd ? 0 : T.noSpdN+1;
+      var gpsMoving = T.gpsMoveN>=2; if (gpsMoving) T.walked = true;
+      var mStill = T.motionOn() && T.motion==='still';
+      if (!T.hold) return (mStill && !gpsMoving) || (hasSpd && sp<C.stillSpeed);
+      if (gpsMoving) return false;
+      if (mStill) return true;
+      if (!hasSpd) return T.motion==='walking' ? false : T.noSpdN<2;
+      return !(T.spdGoN>=2 || sp>=C.moveSpeed);
     }
     function feedStraight(f){
       if (spike(f)){ T.rejects++; if (T.rejects<C.maxReject) return 'jump'; T.buf = []; T.pos = null; }
@@ -1302,8 +1366,16 @@ var CORE = (function(){
           if (T.rejects<C.maxReject){ T.buf = prev; return 'jump'; }
           T.buf = [f]; s = wmean(T.buf); res = 'reanchor'; } }
       if (!T.pos && T.rejects>=C.maxReject) res = 'reanchor';
+      var fresh = !T.pos, hold = holdNow(f);
       T.rejects = 0; T.pos = {lat:s.lat, lon:s.lon}; T.posT = f.t; T.lastS = s; T.lastST = f.t;
-      T.live = T.committed = hav(T.origin, s) + lag(f, s, T.origin);
+      var d = hav(T.origin, s) + (hold ? 0 : lag(f, s, T.origin));
+      if (!T.passed){
+        if (!hold && d>Math.max(C.dbMin, C.dbK*f.acc) && (T.walked || !T.motionOn())) T.passed = true;
+        else { T.live = T.committed = 0; T.hold = hold; T.holdN = hold ? T.holdN+1 : 0; return 'hold'; }
+      }
+      T.hold = hold && !fresh; T.holdN = T.hold ? T.holdN+1 : 0;
+      if (T.hold) return 'hold';
+      T.live = T.committed = d;
       return res;
     }
     function feedPath(f){
@@ -1322,6 +1394,11 @@ var CORE = (function(){
       }
       T.rejects = 0; T.lastS = s; T.lastST = f.t;
       var cap = T.spdOk && C.spdK>0 ? T.spdInt*C.spdK + C.spdSlack : Infinity;
+      /* HOLD: freeze at the committed distance (the unconfirmed partial step is mostly jitter), keep the anchor on the
+         refined position so standing drift is never summed */
+      if (holdNow(f) || (T.motionOn() && !T.walked)){
+        T.hold = true; T.holdN++; T.anchor = s; T.anchorT = f.t; T.live = T.committed; T.spdInt = 0; T.spdOk = true; return 'hold'; }
+      T.hold = false; T.holdN = 0;
       if (hasSpd && f.speed<C.stillSpeed && d<=C.stillAccK*f.acc){ T.live = T.committed; T.spdInt = 0; return 'still'; }
       var lg = lag(f, s, null);
       if (d>=Math.max(C.minStep, C.stepAccK*f.acc)){ T.committed += Math.min(d, cap); T.anchor=s; T.anchorT=f.t; T.live=T.committed+lg; T.spdInt=0; T.spdOk=true; }
@@ -1357,9 +1434,39 @@ var CORE = (function(){
   }
   /* "close to the next mark" state with hysteresis: enter at <= th, leave only beyond th + hyst */
   function closeState(prev, rem, th, hyst){ return prev ? rem>0 && rem<=th+(hyst==null?2:hyst) : rem>0 && rem<=th; }
+  /* ---- motion classifier (build 3.3): accelerationIncludingGravity -> 'unknown' | 'still' | 'walking'
+     Rolling window (2 s) of the acceleration magnitude (orientation-free). Walking = std-dev >= 0.6 m/s^2 AND
+     >= 3 step peaks in the window (an arm jiggle or two is not walking). Still = std-dev < 0.3 m/s^2 for 0.6 s.
+     In between, the previous state is kept. */
+  function createMotion(cfg){
+    var C = {win:2000, walkStd:0.6, stillStd:0.3, stillMs:600, minN:8, stepK:0.5, stepGap:250, minSteps:3, staleMs:2500};
+    for (var k in (cfg||{})) C[k] = cfg[k];
+    var M = {cfg:C, state:'unknown', buf:[], lastT:null, std:0, steps:0, n:0, stillSince:null};
+    M.reset = function(){ M.state='unknown'; M.buf=[]; M.lastT=null; M.std=0; M.steps=0; M.stillSince=null; };
+    M.feed = function(x, y, z, t){
+      if (x==null || y==null || z==null || !isFinite(x+y+z) || !isFinite(t)) return M.state;
+      M.n++;
+      var g = Math.sqrt(x*x + y*y + z*z);
+      if (M.lastT!=null && (t-M.lastT>C.staleMs || t<M.lastT)){ M.buf = []; M.stillSince = null; }
+      M.lastT = t; M.buf.push({t:t, g:g});
+      while (M.buf.length && t-M.buf[0].t>C.win) M.buf.shift();
+      var n = M.buf.length; if (n<C.minN || t-M.buf[0].t<C.win*0.6) return M.state;
+      var mean = 0, i; for (i=0;i<n;i++) mean += M.buf[i].g; mean /= n;
+      var v = 0; for (i=0;i<n;i++) v += Math.pow(M.buf[i].g-mean, 2); M.std = Math.sqrt(v/n);
+      var th = mean + Math.max(C.stepK, 0.6*M.std), steps = 0, lastPk = -Infinity;
+      for (i=1;i<n-1;i++){ var p = M.buf[i];
+        if (p.g>th && p.g>=M.buf[i-1].g && p.g>M.buf[i+1].g && p.t-lastPk>=C.stepGap){ steps++; lastPk = p.t; } }
+      M.steps = steps;
+      if (M.std>=C.walkStd && steps>=C.minSteps){ M.state = 'walking'; M.stillSince = null; }
+      else if (M.std<C.stillStd){ if (M.stillSince==null) M.stillSince = t; if (t-M.stillSince>=C.stillMs) M.state = 'still'; }
+      else M.stillSince = null;
+      return M.state;
+    };
+    return M;
+  }
   return {UNITS:UNITS, UNIT_ORDER:UNIT_ORDER, unitSys:unitSys, mainUnit:mainUnit, parseNum:parseNum, toMeters:toMeters, fromMeters:fromMeters,
     trimNum:trimNum, group:group, normVal:normVal, lenParts:lenParts, fmtLen:fmtLen, readout:readout, remain:remain, markText:markText,
-    speakText:speakText, sortMarks:sortMarks, fillSeries:fillSeries, isOldDefault:isOldDefault, hasDist:hasDist, hav:hav, wmean:wmean, createTracker:createTracker, crossMarks:crossMarks, closeState:closeState};
+    speakText:speakText, sortMarks:sortMarks, fillSeries:fillSeries, isOldDefault:isOldDefault, hasDist:hasDist, hav:hav, wmean:wmean, createTracker:createTracker, crossMarks:crossMarks, closeState:closeState, createMotion:createMotion};
 })();
 if (typeof module!=='undefined' && module.exports) module.exports = CORE;
 /*CORE-END*/
@@ -2840,7 +2947,7 @@ window.FORGE = {TC:TC, tm:function(){ return TM; }, ts:function(){ return TS; },
   list:function(){ return cleanList(); }, workouts:function(){ return wkAll(); }};
 
 /* About / Display: build label + live viewport diagnostics (for the iOS Home-Screen bottom-gap bug) */
-var BUILD = (window.FORGE_SHELL && FORGE_SHELL.build) || 'Build 3.2';
+var BUILD = (window.FORGE_SHELL && FORGE_SHELL.build) || 'Build 3.3';
 setTxt('hdBuild', BUILD.toUpperCase()); setTxt('abBuild', BUILD.toUpperCase()); setTxt('footBuild', 'FORGE · Timer + Course · '+BUILD);
 function diagData(){
   var S = window.FORGE_SHELL, st = S ? S.measure() : null, ins = S ? S.insets() : {top:0,bottom:0,left:0,right:0};
@@ -2879,6 +2986,32 @@ setTimeout(diagLive, 50);
 /* ================= MEASURE build 3.2: straight/path modes, start lock, accuracy chip =================
    Later function declarations in this IIFE replace the ConeMarker ones (onPos, check, saveRun). */
 var closeOn = false, lockTimer = null, lockWall = 0;
+/* ---- build 3.3: motion sensor (accelerometer) -> T.setMotion('still'|'walking'|'unknown'|null) ----
+   iOS needs DeviceMotionEvent.requestPermission() inside the user gesture: it is called from the START tap.
+   Denied / missing / no events within 3 s / events stale > 3 s => null (GPS-only hold + deadband). */
+var MO = C.createMotion(), moOn = false, moState = 'off', moLast = 0, moWatchT = null;
+function onMotion(e){
+  var a = e.accelerationIncludingGravity; if (!a || a.x==null || a.y==null || a.z==null) return;
+  var prev = MO.state; moLast = Date.now(); if (moState!=='on') moState = 'on';
+  MO.feed(a.x, a.y, a.z, moLast); T.setMotion(MO.state);
+  if (MO.state!==prev) measureX();
+}
+function motionAttach(){ if (moOn) return; moOn = true; moState = 'wait'; moLast = 0; MO.reset();
+  window.addEventListener('devicemotion', onMotion);
+  clearTimeout(moWatchT); moWatchT = setTimeout(function(){ if (!moLast){ moState = 'none'; T.setMotion(null); measureX(); } }, 3000); }
+function motionStart(){ /* must run synchronously inside the START tap */
+  if (moOn) return;
+  if (typeof window.DeviceMotionEvent==='undefined'){ moState = 'none'; T.setMotion(null); return; }
+  if (typeof DeviceMotionEvent.requestPermission==='function'){
+    if (moState==='denied'){ T.setMotion(null); return; }
+    moState = 'asking';
+    var no = function(){ moState = 'denied'; T.setMotion(null); toast('Motion access off · GPS-only hold'); measureX(); };
+    try{ DeviceMotionEvent.requestPermission().then(function(r){ if (r==='granted') motionAttach(); else no(); }, no); }catch(e){ no(); }
+  } else motionAttach();
+}
+function motionStop(){ if (moOn){ window.removeEventListener('devicemotion', onMotion); moOn = false; } clearTimeout(moWatchT);
+  MO.reset(); moLast = 0; if (moState!=='denied') moState = 'off'; T.setMotion(null); }
+setInterval(function(){ if (moOn && moLast && Date.now()-moLast>3000 && T.motion!=null){ T.setMotion(null); measureX(); } }, 1000);
 function mPref(){ return LS.get('forge_mmode','straight')==='path' ? 'path' : 'straight'; }
 function accTxt(a){ return '±'+C.fmtLen(Math.round(a), sys); }
 function saveRun(){ lastSave = Date.now();
@@ -2915,7 +3048,7 @@ function onPos(p){
   setGps(c.accuracy);
   if (T.state==='locking'){ lockWall = Date.now(); lockMsg(); }
   if (r==='go') onGo(false);
-  else if (r==='move' || r==='still' || r==='reanchor') check();
+  else if (r==='move' || r==='still' || r==='reanchor' || r==='hold') check();
   renderTrack();
 }
 function check(){
@@ -2935,6 +3068,14 @@ function measureX(){
   seg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.dataset.m===T.mode); });
   $('mHint').textContent = T.mode==='straight' ? 'Straight: walk a straight line from the start' : 'Path: follows your route (less precise)';
   $('mTip').style.display = st==='idle' ? '' : 'none';
+  $('mMode').style.display = (st==='idle' || (st==='paused' && T.live===0)) ? '' : 'none';
+  var md = $('mdChip'); md.classList.toggle('on', st!=='idle'); md.textContent = T.mode==='straight' ? 'STRAIGHT' : 'PATH';
+  var mo = $('moChip'), mm = T.motionOn() ? T.motion : (st==='run' ? (T.hold ? 'still' : 'walking') : null);
+  if (st==='run' && T.hold && !T.motionOn()) mm = 'still';
+  mo.classList.toggle('on', (st==='run' || st==='locking') && !!mm);
+  if (mm){ mo.dataset.m = mm; mo.querySelector('b').textContent = mm==='still' ? 'STILL' : 'WALKING'; }
+  mo.title = T.motionOn() ? 'Motion sensor' : 'GPS speed (motion sensor off)';
+  $('dist').classList.toggle('held', st==='run' && !!T.hold && T.live>0);
   var chip = $('accChip'), showC = (st==='run' || st==='locking') && T.acc!=null;
   chip.classList.toggle('on', showC);
   if (showC){ chip.dataset.q = T.acc<=5 ? 'g' : T.acc<=10 ? 'a' : 'r'; chip.textContent = accTxt(T.acc); }
@@ -2949,6 +3090,7 @@ function measureX(){
     if (T.weak){ $('startTx').textContent = 'START ANYWAY'; $('startIc').innerHTML = ICONS.play; sb.classList.remove('pause'); }
   }
   ring.classList.toggle('close', !!(st==='run' && closeOn));
+  if (st!=='locking' && $('dist').style.fontSize==='94px' && getComputedStyle($('hero')).containerType==='inline-size' && !$('hero').classList.contains('compact')) $('dist').style.fontSize = '26cqw';
 }
 document.querySelectorAll('#modeSeg button').forEach(function(b){ b.onclick = function(){
   if (T.state!=='idle'){ toast('Reset to switch mode'); return; }
@@ -2958,13 +3100,13 @@ $('startBtn').onclick = function(){
   unlock();
   var st = T.state;
   if (st==='idle' || st==='paused'){
-    sortNow(); syncHits(); if (!startWatch()) return;
+    motionStart(); sortNow(); syncHits(); if (!startWatch()) return;
     var resume = st==='paused'; T.start(); wake(true); setGps(T.acc); closeOn = false;
     if (T.state==='run'){ runT0 = Date.now(); status('Resumed · distance from your start point','ok',2600); }
     else { lockWall = Date.now(); status(resume ? 'Re-locking GPS · hold still' : 'LOCKING START… hold still'); startLockTimer(); }
   } else if (st==='locking'){
     if (T.weak){ if (T.forceGo()) onGo(true); else toast('No GPS fix yet'); }
-    else { T.cancel(); stopLockTimer(); if (T.state==='idle'){ stopWatch(); wake(false); setGps(null); } status(T.state==='paused' ? 'Paused · distance frozen' : ''); }
+    else { T.cancel(); stopLockTimer(); if (T.state==='idle'){ stopWatch(); motionStop(); wake(false); setGps(null); } status(T.state==='paused' ? 'Paused · distance frozen' : ''); }
   } else if (st==='run'){
     T.pause(); elapsedBase = elapsed(); runT0 = null; saveRun();
     status(T.mode==='straight' ? 'Paused · alerts off. Resume keeps your start point.' : 'Paused · distance frozen. Walk back freely.');
@@ -2973,7 +3115,7 @@ $('startBtn').onclick = function(){
 };
 $('resetBtn').onclick = function(){
   if ((T.live>0 || Object.keys(hitMap).length) && !confirm('Reset distance to 0?')) return;
-  stopWatch(); wake(false); stopLockTimer(); T.reset(); T.setMode(mPref()); hitMap = {}; elapsedBase = 0; runT0 = null; closeOn = false;
+  stopWatch(); motionStop(); wake(false); stopLockTimer(); T.reset(); T.setMode(mPref()); hitMap = {}; elapsedBase = 0; runT0 = null; closeOn = false;
   LS.set('cm2_run',null); status(''); setGps(null); renderTrack();
 };
 if (T.state==='idle') T.setMode(mPref());
