@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="FORGE">
 <meta name="application-name" content="FORGE">
 <meta name="format-detection" content="telephone=no">
-<meta name="theme-color" content="#060708">
+<meta name="theme-color" content="#08090a">
 <meta name="description" content="FORGE: HYROX interval timer + GPS course measuring in one app.">
 <title>FORGE · Timer + Course</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -667,7 +667,58 @@ nav.tabbar button{padding-top:9px;padding-bottom:max(5px,calc(11px - var(--sab))
 #timer-tab[data-st="idle"] .hero.th .hero-in .k,#timer-tab[data-st="done"] .hero.th .hero-in .k{font-size:10.5px;letter-spacing:.2em;max-width:64%}
 #timer-tab[data-st="idle"] .hero.th .rsub,#timer-tab[data-st="done"] .hero.th .rsub{font-size:11px;letter-spacing:.14em;max-width:66%;margin-left:auto;margin-right:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #timer-tab[data-st="idle"] .hero.th .t-stn,#timer-tab[data-st="done"] .hero.th .t-stn{max-width:70%;margin-left:auto;margin-right:auto}
+/* ===== v3.1 iOS 26 standalone "lying viewport" workaround (see FORGE_SHELL in <head>) ===== */
+html,body{background:#08090a}   /* = tab bar colour; iOS paints any system strip from the page background */
+html.sa-fix body{bottom:auto!important;height:var(--shell-h)!important}
+html.sa-fix nav.tabbar{padding-bottom:max(var(--sab),var(--sa-gap))}
+html.sa-fix nav.tabbar button{padding-bottom:5px}
+/* fallback: paint below the reported viewport in the tab bar colour (fixed => not clipped by body overflow) */
+body::after{content:"";position:fixed;left:0;right:0;top:100%;height:200px;background:#08090a;pointer-events:none;z-index:0}
+/* About / Display card */
+.chead small .bld{color:var(--dim2);letter-spacing:.2em;margin-left:6px}
+.diag{display:grid;grid-template-columns:auto 1fr;gap:0;margin:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.diag dt,.diag dd{margin:0;padding:7px 10px;border-top:1px solid var(--line);font:600 12.5px/1.25 var(--fd);letter-spacing:.1em}
+.diag dt{color:var(--dim);text-transform:uppercase}
+.diag dd{color:var(--txt);text-align:right;font-variant-numeric:tabular-nums;letter-spacing:.04em;word-break:break-word}
+.diag dt:nth-of-type(1),.diag dd:nth-of-type(1){border-top:0}
+.diag dd.ok{color:var(--ok)}.diag dd.warn{color:var(--warn)}
 </style>
+<script>
+/* FORGE_SHELL: iOS Home-Screen bottom-gap workaround, runs before first paint.
+   iOS standalone + viewport-fit=cover + black-translucent can report a "lying" viewport: innerHeight / 100dvh /
+   inset:0 stop ~59px short of screen.height (WebKit bugs 254868, 301994). When that happens (standalone, content
+   drawn under the status bar, gap 1..120px) the shell is sized to the physical screen height and the tab bar pads
+   its buttons up by the gap, so they stay inside the touchable area while its background reaches the bottom edge. */
+(function(){
+  var R = document.documentElement, BUILD = 'Build 3.1 \u00b7 2026-09-26', last = null;
+  function standalone(){ try{ return navigator.standalone===true || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches; }catch(e){ return false; } }
+  var probe = document.createElement('div'); probe.id = 'saProbe'; probe.setAttribute('aria-hidden','true');
+  probe.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+  R.appendChild(probe);
+  function insets(){ var cs = getComputedStyle(probe); return {top:parseFloat(cs.paddingTop)||0, right:parseFloat(cs.paddingRight)||0, bottom:parseFloat(cs.paddingBottom)||0, left:parseFloat(cs.paddingLeft)||0}; }
+  function measure(){
+    var sa = standalone(), w = window.innerWidth, h = window.innerHeight, portrait = h>=w;
+    var sw = screen.width||0, shh = screen.height||0;
+    var full = portrait ? Math.max(sw, shh) : Math.min(sw, shh), ins = insets(), gap = Math.round(full - h);
+    if (sa && gap>120 && last) return last;           /* keyboard / split view: keep the previous state */
+    var on = !!(sa && gap>0 && gap<=120 && (ins.top>0 || ins.left>0 || ins.right>0));
+    R.classList.toggle('sa-fix', on);
+    R.style.setProperty('--sa-gap', (on ? gap : 0)+'px');
+    if (on) R.style.setProperty('--shell-h', full+'px'); else R.style.removeProperty('--shell-h');
+    var changed = !last || last.on!==on || last.gap!==gap || last.full!==full;
+    last = {on:on, gap:gap, full:full, standalone:sa, portrait:portrait, insets:ins};
+    if (changed){ try{ window.dispatchEvent(new Event('forgeshell')); }catch(e){} }
+    return last;
+  }
+  window.FORGE_SHELL = {build:BUILD, measure:measure, insets:insets, standalone:standalone, last:function(){ return last; }};
+  measure();
+  function later(){ measure(); setTimeout(measure, 350); }
+  window.addEventListener('resize', later); window.addEventListener('orientationchange', later); window.addEventListener('pageshow', later);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', function(){ measure(); });
+  document.addEventListener('DOMContentLoaded', measure);
+  [120, 600, 1500].forEach(function(t){ setTimeout(measure, t); });
+})();
+</script>
 </head>
 <body data-tab="timer-tab">
 <div class="fx"></div>
@@ -856,7 +907,7 @@ nav.tabbar button{padding-top:9px;padding-bottom:max(5px,calc(11px - var(--sab))
 
 <!-- ================= SETTINGS ================= -->
 <section id="settings-tab" class="tab">
-  <div class="chead"><h2><small>FORGE · TIMER + COURSE</small>Settings</h2></div>
+  <div class="chead"><h2><small>FORGE · TIMER + COURSE <span class="bld" id="hdBuild">BUILD 3.1</span></small>Settings</h2></div>
   <div class="card glass">
     <h4>Units <span>measure &amp; map</span></h4>
     <div class="seg useg wide" id="unitSeg2" data-s="metric" aria-label="Units">
@@ -895,7 +946,13 @@ nav.tabbar button{padding-top:9px;padding-bottom:max(5px,calc(11px - var(--sab))
     <div class="set-sum" id="setData"></div>
     <div class="row2" style="margin:0"><button class="btn sm ghost" id="setTReset">RESET SOUNDS</button><button class="btn sm ghost danger" id="setMReset">CLEAR MARKS</button></div>
   </div>
-  <p class="note" style="text-align:center;margin-bottom:10px">FORGE v3.0 · Timer + Course</p>
+  <div class="card glass" id="aboutCard">
+    <h4>About / Display <span id="abBuild">BUILD 3.1</span></h4>
+    <div class="set-sum" id="diagSum"></div>
+    <dl class="diag" id="diag"></dl>
+    <div class="row2" style="margin:10px 0 0"><button class="btn sm outline" id="diagRef">REFRESH</button><button class="btn sm ghost" id="diagCopy">COPY INFO</button></div>
+  </div>
+  <p class="note" style="text-align:center;margin-bottom:10px" id="footBuild">FORGE · Timer + Course</p>
 </section>
 </main>
 
@@ -2669,6 +2726,43 @@ window.FORGE = {TC:TC, tm:function(){ return TM; }, ts:function(){ return TS; },
   openRound:openRound, closeRound:closeRound, openWorkouts:openWorkouts, closeWorkouts:closeWorkouts, save:saveWorkout,
   add:function(name, work, rest, rep){ $('bName').value = name||''; if (work!=null) $('bWork').value = fmtS(work); if (rest!=null) $('bRest').value = fmtS(rest); $('bRep').value = String(rep||1); builderAdd(); },
   list:function(){ return cleanList(); }, workouts:function(){ return wkAll(); }};
+
+/* About / Display: build label + live viewport diagnostics (for the iOS Home-Screen bottom-gap bug) */
+var BUILD = (window.FORGE_SHELL && FORGE_SHELL.build) || 'Build 3.1';
+setTxt('hdBuild', BUILD.toUpperCase()); setTxt('abBuild', BUILD.toUpperCase()); setTxt('footBuild', 'FORGE · Timer + Course · '+BUILD);
+function diagData(){
+  var S = window.FORGE_SHELL, st = S ? S.measure() : null, ins = S ? S.insets() : {top:0,bottom:0,left:0,right:0};
+  var vv = window.visualViewport, nb = document.querySelector('nav.tabbar').getBoundingClientRect(), bh = document.body.getBoundingClientRect();
+  var ios = (navigator.userAgent.match(/OS (\d+)[_.](\d+)(?:[_.](\d+))? like Mac/) || []);
+  var dm = ['fullscreen','standalone','minimal-ui','browser'].filter(function(m){ try{ return matchMedia('(display-mode: '+m+')').matches; }catch(e){ return false; } })[0] || '?';
+  var full = st ? st.full : Math.max(screen.width, screen.height);
+  return [
+    ['Build', BUILD],
+    ['Standalone', (st && st.standalone ? 'YES' : 'NO')+' · navigator.standalone='+String(navigator.standalone)+' · '+dm, st && st.standalone ? 'ok' : ''],
+    ['Gap fix', st && st.on ? 'ACTIVE · shell +'+st.gap+'px → '+st.full+'px' : 'off (not needed)', st && st.on ? 'warn' : ''],
+    ['innerHeight', innerWidth+' × '+innerHeight],
+    ['outerHeight', outerWidth+' × '+outerHeight],
+    ['docEl.clientHeight', String(document.documentElement.clientHeight)],
+    ['visualViewport', vv ? Math.round(vv.width)+' × '+Math.round(vv.height)+' (top '+Math.round(vv.offsetTop)+')' : 'n/a'],
+    ['screen', screen.width+' × '+screen.height+(ios[1] ? ' · iOS '+ios[1]+'.'+ios[2]+(ios[3] ? '.'+ios[3] : '') : '')],
+    ['devicePixelRatio', String(window.devicePixelRatio)],
+    ['App shell height', String(Math.round(bh.height))+' (top '+Math.round(bh.top)+')'],
+    ['Tab bar bottom', String(Math.round(nb.bottom))+' · gap to screen '+Math.round(full - nb.bottom), Math.round(full - nb.bottom)>1 && !(st && !st.standalone) ? 'warn' : ''],
+    ['Safe area top / bottom', Math.round(ins.top)+' / '+Math.round(ins.bottom)+(ins.left||ins.right ? ' · L/R '+Math.round(ins.left)+'/'+Math.round(ins.right) : '')]
+  ];
+}
+function renderDiag(){
+  var d = diagData();
+  setHTML('diag', d.map(function(r){ return '<dt>'+esc(r[0])+'</dt><dd'+(r[2] ? ' class="'+r[2]+'"' : '')+'>'+esc(r[1])+'</dd>'; }).join(''));
+  setTxt('diagSum', 'If you see a strip under the tab bar, screenshot this card and send it over.');
+}
+var diagT = null;
+function diagLive(){ clearInterval(diagT); diagT = null; if (curTab==='settings-tab'){ renderDiag(); diagT = setInterval(function(){ if (curTab!=='settings-tab'){ clearInterval(diagT); diagT = null; return; } renderDiag(); }, 1000); } }
+$('diagRef').onclick = function(){ renderDiag(); toast('Display info refreshed'); };
+$('diagCopy').onclick = function(){ var t = 'FORGE display info\n'+diagData().map(function(r){ return r[0]+': '+r[1]; }).join('\n'); copyText(t).then(function(ok){ toast(ok ? 'Display info copied' : 'Select the text and copy it'); $('bkTxt').value = ''; }); };
+document.querySelectorAll('nav.tabbar button').forEach(function(b){ b.addEventListener('click', function(){ setTimeout(diagLive, 30); }); });
+window.addEventListener('forgeshell', function(){ setAppH(); if (curTab==='settings-tab') renderDiag(); });
+setTimeout(diagLive, 50);
 
 })();
 </script>
